@@ -4,6 +4,7 @@ import { SETTINGS } from 'src/app.utils';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ReturnUserDto } from './dto/return-user.dto';
+import { Token } from './dto/token';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -28,15 +29,16 @@ export class UsersController {
         return await this.usersService.createUser(body);
     }
 
-    @ApiOkResponse({ type: Object })
+    @ApiOkResponse({ type: Token })
     @Post('/login')
     @HttpCode(200)
-    async login(@Body() loginUserDto: LoginUserDto): Promise<Object> {
+    async login(@Body() loginUserDto: LoginUserDto): Promise<Token> {
         const jwt = await this.usersService.login(loginUserDto);
-        return {
+        const token: Token = {
             access_token: jwt,
             token_type: 'JWT',
-            expires_in: 100000
-        };
+            expires_in: 10000
+        }
+        return token;
     }
 }
