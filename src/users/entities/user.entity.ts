@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { BaseEntity, BeforeInsert, Column, Entity, PrimaryColumn } from "typeorm";
+import { BaseEntity, BeforeInsert, BeforeUpdate, Column, Entity, PrimaryColumn } from "typeorm";
 import * as bcrypt from 'bcrypt';
 
 @Entity({ name: 'users' })
@@ -25,7 +25,8 @@ export class User extends BaseEntity {
     password: string;
 
     @BeforeInsert()
-    async setPassword(password: string) {
+    @BeforeUpdate()
+    async hashPassword(password: string) {
         const salt = await bcrypt.genSalt();
         this.password = await bcrypt.hash(password || this.password, salt);
     }

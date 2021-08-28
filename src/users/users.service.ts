@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -53,11 +53,14 @@ export class UsersService {
             return await this.usersRepository.save(newUser);
         }
     }
-
-    async updateUser(id: number, name: string): Promise<User> {
-        const user = await this.getOneById(id);
-        user.name = name;
-        return this.usersRepository.save(user);
+    // Todo: make sure that user does not use the same password as before
+    async updateUser(userId: number, updateUserDto: UpdateUserDto): Promise<any> {
+        const user = await this.getOneById(userId);
+        if (user) {
+            return await this.usersRepository.save(Object.assign(user, updateUserDto));
+        } else {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
     }
 
     async deleteUser(id: number): Promise<User> {
