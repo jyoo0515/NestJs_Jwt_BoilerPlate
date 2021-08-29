@@ -12,7 +12,8 @@ async function bootstrap() {
     transform: true,
   }));
 
-  // app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api');
+  app.enableCors();
 
   const options = new DocumentBuilder()
     .setTitle('NestJs Auth API')
