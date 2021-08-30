@@ -5,8 +5,5 @@ export class Token {
     access_token: string;
 
     @ApiProperty()
-    token_type: string;
-
-    @ApiProperty()
-    expires_in: number;
+    expires_in: string;
 };

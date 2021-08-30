@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
 import { SETTINGS } from 'src/app.utils';
@@ -12,7 +13,7 @@ import { UsersService } from './users.service';
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-    constructor(private usersService: UsersService) { }
+    constructor(private usersService: UsersService, private configService: ConfigService) { }
 
     @ApiOkResponse({ type: ReturnUserDto, isArray: true, description: "list of all users" })
     @Get()
@@ -56,8 +57,7 @@ export class UsersController {
         const jwt = await this.usersService.login(loginUserDto);
         const token: Token = {
             access_token: jwt,
-            token_type: 'JWT',
-            expires_in: 10000
+            expires_in: this.configService.get('TOKEN_EXPIRY')
         }
         return token;
     }
