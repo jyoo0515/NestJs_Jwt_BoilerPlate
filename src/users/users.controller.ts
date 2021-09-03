@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
 import { Response } from 'express';
 import { SETTINGS } from 'src/app.utils';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ReturnUserDto } from './dto/return-user.dto';
@@ -37,6 +38,7 @@ export class UsersController {
         return plainToClass(ReturnUserDto, user);
     }
 
+    @UseGuards(JwtAuthGuard)
     @ApiOkResponse({ type: ReturnUserDto })
     @Put('/:id')
     async updateUser(@Param('id') id: number, @Body(SETTINGS.VALIDATION_PIPE) body: UpdateUserDto): Promise<ReturnUserDto> {
@@ -44,6 +46,7 @@ export class UsersController {
         return plainToClass(ReturnUserDto, user);
     }
 
+    @UseGuards(JwtAuthGuard)
     @ApiOkResponse({ type: ReturnUserDto })
     @Delete('/:id')
     async deleteUser(@Param('id') id: number): Promise<ReturnUserDto> {
