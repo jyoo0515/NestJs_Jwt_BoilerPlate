@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
+import { Response } from 'express';
 import { SETTINGS } from 'src/app.utils';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -53,12 +54,18 @@ export class UsersController {
     @ApiOkResponse({ type: Token })
     @Post('/login')
     @HttpCode(200)
-    async login(@Body() loginUserDto: LoginUserDto): Promise<Token> {
+    async login(@Body() loginUserDto: LoginUserDto, @Res({passthrough: true}) res: Response): Promise<Token> {
         const jwt = await this.usersService.login(loginUserDto);
         const token: Token = {
             access_token: jwt,
             expires_in: this.configService.get('TOKEN_EXPIRY')
         }
+        res.cookie('access_token', jwt, {
+            expires: new Date(new Date().getTime() + 8 * 60 * 60000), // 8 hours
+            sameSite: 'strict',
+            domain: 'localhost',
+            httpOnly: true
+        });
         return token;
     }
 }
