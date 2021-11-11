@@ -19,37 +19,46 @@ export class UsersService {
     // SELECT * from user
   }
 
-  async getOneById(id: number): Promise<User | null> {
+  async getOneById(id: number): Promise<User> {
     try {
       // const user = await this.usersRepository.findOneOrFail({ id }, { select: ['id', 'email', 'name'] });
       const user = await this.usersRepository.findOneOrFail({ id });
       return user;
     } catch (err) {
-      return null;
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
   }
 
-  async getOneByUsername(username: string): Promise<User | null> {
+  async getOneByUsername(username: string): Promise<User> {
     try {
       const user = await this.usersRepository.findOneOrFail({ username });
       return user;
     } catch (err) {
-      return null;
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
   }
 
-  async getOneByEmail(email: string): Promise<User | null> {
+  async getOneByEmail(email: string): Promise<User> {
     try {
       const user = await this.usersRepository.findOneOrFail({ email });
       return user;
     } catch (err) {
-      return null;
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  async checkIfUnique(email: string): Promise<boolean> {
+    try {
+      const user = await this.usersRepository.findOneOrFail({ email });
+      return false;
+    } catch (err) {
+      return true;
     }
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const user = this.getOneByEmail(createUserDto.email);
-    if (user) {
+    const unique = await this.checkIfUnique(createUserDto.email);
+    if (!unique) {
       throw new HttpException('Email already in use', HttpStatus.CONFLICT);
     } else {
       const newUser = this.usersRepository.create(createUserDto);
@@ -59,13 +68,15 @@ export class UsersService {
   // Todo: make sure that user does not use the same password as before
   async updateUser(userId: number, updateUserDto: UpdateUserDto): Promise<any> {
     const user = await this.getOneById(userId);
-    if (user) {
-      return await this.usersRepository.save(
-        Object.assign(user, updateUserDto),
-      );
-    } else {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    // If email is changed, check if it is unique
+    if (!updateUserDto.email === undefined) {
+      const unique = await this.checkIfUnique(updateUserDto.email);
+      if (!unique) {
+        throw new HttpException('Email already in use', HttpStatus.CONFLICT);
+      }
     }
+    return await this.usersRepository.save(Object.assign(user, updateUserDto));
   }
 
   async deleteUser(id: number): Promise<User> {
@@ -75,19 +86,15 @@ export class UsersService {
 
   async login(loginUserDto: LoginUserDto): Promise<string> {
     const user = await this.getOneByUsername(loginUserDto.username);
-    if (user) {
-      const valid = await this.authService.comparePassword(
-        loginUserDto.password,
-        user.password,
-      );
-      if (valid) {
-        const userId = await this.getOneById(user.id);
-        return this.authService.generateJwt(userId);
-      } else {
-        throw new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
-      }
+    const valid = await this.authService.comparePassword(
+      loginUserDto.password,
+      user.password,
+    );
+    if (valid) {
+      const userId = await this.getOneById(user.id);
+      return this.authService.generateJwt(userId);
     } else {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
     }
   }
 }

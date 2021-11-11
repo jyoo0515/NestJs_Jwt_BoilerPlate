@@ -27,6 +27,7 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   email: string;
 
+  // @Exclude does the same job as dto
   @ApiProperty()
   @Column()
   password: string;
